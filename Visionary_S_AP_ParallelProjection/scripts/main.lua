@@ -1,0 +1,136 @@
+--[[----------------------------------------------------------------------------
+
+  Application Name: Visionary_S_AP_ParallelProjection
+  
+  Summary:
+  Sample to show how to get a parallel projection of the scene out of a Z image.
+  
+  Description:
+  Set up the camera to take live images continuously and automatically calculate
+  pointclouds out of it. First the full Z image is shown on the left Viewer. In
+  the second viewer to the right, the Z map image is converted to a pointcloud and shown.
+  In the bottom viewer, height map image of the point cloud rotated by a specified angle
+  along the Y and X axes is shown.
+  
+  How to run:
+  Start by running the app (F5) or debugging (F7+F10).
+  Set a breakpoint on the first row inside the main function to debug step-by-step.
+  See the results in the different 3D and 2D viewers on the DevicePage.
+  
+  More Information:
+  If you want to run this app on an emulator some changes are needed to get images.
+    
+------------------------------------------------------------------------------]]
+--Start of Global Scope---------------------------------------------------------
+-- Variables, constants, serves etc. should be declared here.
+
+-- Setup the camera and get the camera model
+local camera = Image.Provider.Camera.create()
+Image.Provider.Camera.stop(camera)
+-- Get the camera model
+local cameraModel = Image.Provider.Camera.getInitialCameraModel(camera)
+
+-- initialize the point cloud converter with the camera model
+local pc_converter = Image.PointCloudConversion.PlanarDistance.create()
+pc_converter:setCameraModel(cameraModel)
+
+-- Setup the viewers
+local viewers =
+  { View.create("v1"),
+    View.create("v2"),
+    View.create("v3") }
+
+local deco1 = View.ImageDecoration.create()
+deco1:setRange(1150, 2500)
+local deco2 = View.ImageDecoration.create()
+deco2:setRange(150, 1500)
+
+-- Angles closer to +90 and -90 may result in only a line in the resulting height map
+local splatSize = 5
+local xRotationAngle = 0
+local yRotationAngle = 0
+
+-- Box which form the ROI
+local box = nil
+
+-- Transformations for the box
+local boxTransform = nil
+
+-- Transformations for rotating the point cloud
+local pcTransform_Rotation = nil
+--End of Global Scope-----------------------------------------------------------
+
+--Start of Function and Event Scope---------------------------------------------
+
+--@updateTransforms():
+local function updateTransforms()
+  -- Update the Transformation objects according to the new rotation angles
+  boxTransform = Transform.createRigidEuler3D("ZYX", 0,
+                                            math.rad(yRotationAngle), math.rad(xRotationAngle), 0, 0, 250)
+  box = Shape3D.createBox(3000, 2000, 2000, boxTransform)
+  pcTransform_Rotation = Transform.createRigidEuler3D("ZYX", math.rad(180),
+                                            math.rad(yRotationAngle), math.rad(xRotationAngle), 0, 0, 0)
+end
+
+--@getXAngle(change:int):
+local function getXAngle(change)
+  xRotationAngle = change
+  updateTransforms()
+end
+Script.serveFunction("Visionary_S_AP_ParallelProjection.getXAngle", getXAngle)
+
+--@getYAngle(change:int):
+local function getYAngle(change)
+  yRotationAngle = change
+  updateTransforms()
+end
+Script.serveFunction("Visionary_S_AP_ParallelProjection.getYAngle", getYAngle)
+
+--@setSplatSize(change:int):
+local function setSplatSize(change)
+  splatSize = change
+end
+Script.serveFunction("Visionary_S_AP_ParallelProjection.setSplatSize", setSplatSize)
+
+local function main()
+  -- Setup the transformation objects with the default values
+  updateTransforms()
+  -- Update the camera configuration and start image acquisition
+  local config = Image.Provider.Camera.getActualConfig(camera)
+  Image.Provider.Camera.V3SXX2_1Config.setColorIntegrationTime(config, 10000)
+  Image.Provider.Camera.V3SXX2_1Config.setStereoIntegrationTime(config, 1000)
+  Image.Provider.Camera.setConfig(camera, config)
+  Image.Provider.Camera.start(camera)
+end
+--The following registration is part of the global scope which runs once after startup
+--Registration of the 'main' function to the 'Engine.OnStarted' event
+Script.register("Engine.OnStarted", main)
+
+--------------------------------------------------------------------------------
+
+--@handleOnNewImage(image:Image,sensordata:SensorData)
+local function handleOnNewImage(image)
+  -- Get the point cloud from the z map image
+  local pointCloud = pc_converter:toPointCloud(image[1])
+  pointCloud:transformInplace(Transform.createTranslation3D(0, 0, -1000))
+
+  -- Get the height map image (range image) from the point cloud for different directions
+  local rangeImage = PointCloud.toImage(pointCloud:transform(pcTransform_Rotation), box, {1, 1, 0.1},
+                                                  {splatSize}, "BOTTOMMOST")
+
+  View.clear(viewers[1])
+  View.addHeightmap(viewers[1], {image[1]}, deco1)
+  View.present(viewers[1])
+
+  View.clear(viewers[2])
+  View.addHeightmap(viewers[2], {image[1]}, deco1)
+  View.present(viewers[2])
+
+  View.clear(viewers[3])
+  View.addHeightmap(viewers[3], {rangeImage}, deco2)
+  View.present(viewers[3])
+end
+--------------------------------------------------------------------------------
+
+Image.Provider.Camera.register(camera, "OnNewImage", handleOnNewImage)
+--End of Function and Event Scope-----------------------------------------------

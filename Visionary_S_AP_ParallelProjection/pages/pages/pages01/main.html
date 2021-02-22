@@ -1,0 +1,97 @@
+<layout-row id="RowLayout1" style="width:100%;height:100%">
+	
+		
+		
+	
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	<layout-column id="ColumnLayout1" style="width:100%;height:100%">
+		<sick-viewer2d id="Viewer2D2" protocol="auto" viewer-id="v2" title="Z Map" style="width:100%;height:100%">
+	</sick-viewer2d>
+		
+		<sick-viewer2d id="Viewer2D1" protocol="auto" viewer-id="v3" title="Height Map" style="width:100%;height:100%">
+	</sick-viewer2d>
+		
+	</layout-column>
+	<layout-column id="ColumnLayout2" style="width:100%;height:50%">
+		<sick-viewer3d id="Viewer3D1" protocol="auto" style="width:100%;height:100%" viewer-id="v1" title="3D Point Cloud">
+	</sick-viewer3d>
+		
+		
+		
+		
+	</layout-column>
+	<layout-column id="ColumnLayout5">
+			
+		
+		
+		
+		<layout-row id="RowLayout3" style="width:100%;height:100%">
+			<davinci-slider id="Slider2" min="-90" max="90" ticks="1" legend unit="°" title="Angles closer to +90 and -90 results in only a line in the resulting height map" style="height:100%;width:100%">
+		<span>X axis rotation</span>
+			<crown-binding event="change" name="Visionary_S_AP_ParallelProjection/getXAngle" path="param/args/change" auto-commit></crown-binding>
+			<local-binding event="change" name="XValue"></local-binding>
+	</davinci-slider>
+			
+			<davinci-text-field id="TextField2" type="text" readonly value="0" style="width:50%;height:100%">
+			<local-binding property="value" name="XValue"></local-binding>
+	</davinci-text-field>
+		</layout-row>
+		<layout-row id="RowLayout4" style="width:100%;height:100%">
+			<davinci-slider id="Slider1" min="-90" max="90" ticks="1" unit="°" legend title="Angles closer to +90 and -90 results in only a line in the resulting height map" style="width:100%;height:100%">
+		<span>Y axis rotation</span>
+			<local-binding event="change" name="YValue"></local-binding>
+			<crown-binding event="change" name="Visionary_S_AP_ParallelProjection/getYAngle" path="param/args/change" auto-commit></crown-binding>
+	</davinci-slider>
+			<davinci-text-field id="TextField1" type="text" readonly value="0" style="width:50%;height:100%">
+			<local-binding property="value" name="YValue"></local-binding>
+	</davinci-text-field>
+		</layout-row>
+		<layout-row id="RowLayout2" style="width:100%;height:100%">
+			<davinci-value-display id="ValueDisplay1" style="align-self:center;width:100%;height:100%" value="Splat Size">
+	</davinci-value-display>
+			<davinci-numeric-field id="NumericField1" type="outline" max="51" ticks="2" group-separator="," decimal-separator="." format-pattern="0" min="1" value="5" style="width:50%;height:100%">
+				<crown-binding event="change" name="Visionary_S_AP_ParallelProjection/setSplatSize" path="param/args/change" auto-commit></crown-binding>
+	</davinci-numeric-field>
+		</layout-row>
+		
+		</layout-column>
+	
+	
+	
+	
+	
+	
+	
+	
+		
+	
+	
+  
+</layout-row>
