@@ -22,6 +22,7 @@
     
 ------------------------------------------------------------------------------]]
 --Start of Global Scope---------------------------------------------------------
+--Log.setLevel("INFO")
 -- Variables, constants, serves etc. should be declared here.
 
 -- Setup the camera and get the camera model
@@ -99,6 +100,7 @@ local function main()
   local config = Image.Provider.Camera.getActualConfig(camera)
   Image.Provider.Camera.V3SXX2_1Config.setColorIntegrationTime(config, 10000)
   Image.Provider.Camera.V3SXX2_1Config.setStereoIntegrationTime(config, 1000)
+  Image.Provider.Camera.V3SXX2_1Config.setFramePeriod(config, 105000)
   Image.Provider.Camera.setConfig(camera, config)
   Image.Provider.Camera.start(camera)
 end
@@ -107,9 +109,10 @@ end
 Script.register("Engine.OnStarted", main)
 
 --------------------------------------------------------------------------------
-
+local lasttime = 0
 --@handleOnNewImage(image:Image,sensordata:SensorData)
 local function handleOnNewImage(image)
+  local starttime = DateTime.getTimestamp()
   -- Get the point cloud from the z map image
   local pointCloud = pc_converter:toPointCloud(image[1])
   pointCloud:transformInplace(Transform.createTranslation3D(0, 0, -1000))
@@ -129,8 +132,16 @@ local function handleOnNewImage(image)
   View.clear(viewers[3])
   View.addHeightmap(viewers[3], {rangeImage}, deco2)
   View.present(viewers[3])
+  local endtime = DateTime.getTimestamp()
+  Log.info("time betwwen: " .. (starttime - lasttime) .. "ms, processing time: " .. (endtime - starttime) .. " ms" )
+  lasttime = starttime
 end
 --------------------------------------------------------------------------------
-
+-- eventQueueHandle needed to handle the situation that
+-- more frames arrives than our script can process
+local eventQueueHandle = Script.Queue.create()
+eventQueueHandle:setMaxQueueSize(1)
+eventQueueHandle:setPriority("HIGH")
+eventQueueHandle:setFunction(handleOnNewImage)
 Image.Provider.Camera.register(camera, "OnNewImage", handleOnNewImage)
 --End of Function and Event Scope-----------------------------------------------
