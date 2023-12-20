@@ -1,25 +1,25 @@
 --[[----------------------------------------------------------------------------
 
   Application Name: Visionary_S_AP_ParallelProjection
-  
+
   Summary:
   Sample to show how to get a parallel projection of the scene out of a Z image.
-  
+
   Description:
   Set up the camera to take live images continuously and automatically calculate
   pointclouds out of it. First the full Z image is shown on the left Viewer. In
   the second viewer to the right, the Z map image is converted to a pointcloud and shown.
   In the bottom viewer, height map image of the point cloud rotated by a specified angle
   along the Y and X axes is shown.
-  
+
   How to run:
   Start by running the app (F5) or debugging (F7+F10).
   Set a breakpoint on the first row inside the main function to debug step-by-step.
   See the results in the different 3D and 2D viewers on the DevicePage.
-  
+
   More Information:
   If you want to run this app on an emulator some changes are needed to get images.
-    
+
 ------------------------------------------------------------------------------]]
 --Start of Global Scope---------------------------------------------------------
 --Log.setLevel("INFO")
@@ -63,7 +63,6 @@ local pcTransform_Rotation = nil
 
 --Start of Function and Event Scope---------------------------------------------
 
---@updateTransforms():
 local function updateTransforms()
   -- Update the Transformation objects according to the new rotation angles
   boxTransform = Transform.createRigidEuler3D("ZYX", 0,
@@ -73,21 +72,21 @@ local function updateTransforms()
                                             math.rad(yRotationAngle), math.rad(xRotationAngle), 0, 0, 0)
 end
 
---@getXAngle(change:int):
+---@param change int
 local function getXAngle(change)
   xRotationAngle = change
   updateTransforms()
 end
 Script.serveFunction("Visionary_S_AP_ParallelProjection.getXAngle", getXAngle)
 
---@getYAngle(change:int):
+---@param change int
 local function getYAngle(change)
   yRotationAngle = change
   updateTransforms()
 end
 Script.serveFunction("Visionary_S_AP_ParallelProjection.getYAngle", getYAngle)
 
---@setSplatSize(change:int):
+---@param change int
 local function setSplatSize(change)
   splatSize = change
 end
@@ -110,7 +109,8 @@ Script.register("Engine.OnStarted", main)
 
 --------------------------------------------------------------------------------
 local lasttime = 0
---@handleOnNewImage(image:Image,sensordata:SensorData)
+---@param image Image
+---@param sensordata SensorData
 local function handleOnNewImage(image)
   local starttime = DateTime.getTimestamp()
   -- Get the point cloud from the z map image
